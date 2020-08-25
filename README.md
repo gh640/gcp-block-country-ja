@@ -8,7 +8,7 @@ Google Cloud Platform で特定の国からのアクセスをブロックする�
 `git clone` でスクリプトをダウンロードします。
 
 ```bash
-git clone
+git clone https://github.com/gh640/gcp-block-country-ja
 ```
 
 対象とする IP アドレスの範囲をリストしたテキストファイルを用意します。
