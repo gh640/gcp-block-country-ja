@@ -42,6 +42,10 @@ optional arguments:
                         国コード
 ```
 
+## 説明記事
+
+- [Google Cloud Platform で特定の国からのアクセスをブロックする方法 | gotohayato.com](https://gotohayato.com/content/520/)
+
 ## 参考
 
 - [VPC firewall rules overview  |  Google Cloud](https://cloud.google.com/vpc/docs/firewalls)
