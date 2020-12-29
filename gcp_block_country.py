@@ -9,6 +9,7 @@ CHUNK_SIZE = 256
 COUNTRIES = {
     'cn': 'block-china-',
     'ru': 'block-russia-',
+    'au': 'block-australia-',
 }
 
 
