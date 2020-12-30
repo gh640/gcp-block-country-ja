@@ -9,6 +9,7 @@ CHUNK_SIZE = 256
 COUNTRIES = {
     'cn': 'block-china-',
     'ru': 'block-russia-',
+    'au': 'block-australia-',
 }
 
 
@@ -68,8 +69,7 @@ def create_rule(name, addresses, *, dry_run):
         print('Run:', ' '.join(args))
         return
 
-    return subprocess.run(args, check=True)
-
+    return subprocess.run(args, check=True,shell=True)
 
 def get_addresses(country_code):
     """アドレス一覧を取得する"""
