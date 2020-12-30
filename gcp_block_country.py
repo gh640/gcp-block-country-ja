@@ -2,6 +2,7 @@
 
 import argparse
 import subprocess
+import sys
 
 CHUNK_SIZE = 256
 # サポート対象の国の一覧
@@ -69,7 +70,12 @@ def create_rule(name, addresses, *, dry_run):
         print('Run:', ' '.join(args))
         return
 
-    return subprocess.run(args, check=True,shell=True)
+    # Windows では `shell=True` が必要
+    kwargs = {'check': True}
+    if sys.platform == 'win32':
+        kwargs['shell'] = True
+
+    return subprocess.run(args, **kwargs)
 
 def get_addresses(country_code):
     """アドレス一覧を取得する"""
