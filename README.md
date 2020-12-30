@@ -42,6 +42,14 @@ optional arguments:
                         国コード
 ```
 
+### 有効な国コード
+
+現在、以下の国コードが利用可能です。
+
+- `cn`: 中国
+- `ru`: ロシア
+- `au`: オーストラリア
+
 ## 説明記事
 
 - [Google Cloud Platform で特定の国からのアクセスをブロックする方法 | gotohayato.com](https://gotohayato.com/content/520/)
