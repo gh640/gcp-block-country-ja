@@ -3,6 +3,7 @@
 import argparse
 import subprocess
 import sys
+from math import ceil
 
 CHUNK_SIZE = 256
 # サポート対象の国の一覧
@@ -22,6 +23,9 @@ def main():
     gcp_project = args.gcp_project
 
     addresses = get_addresses(country_code)
+    total_count = len(addresses)
+    print('Total addresses: {}'.format(total_count))
+    print('Total rules being created: {}'.format(ceil(total_count / CHUNK_SIZE)))
 
     name_prefix = COUNTRIES[country_code]
     create_rules(name_prefix, addresses, dry_run=dry_run, gcp_project=gcp_project)
