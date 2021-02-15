@@ -19,11 +19,12 @@ def main():
     args = get_args()
     dry_run = args.dry_run
     country_code = args.country_code
+    gcp_project = args.gcp_project
 
     addresses = get_addresses(country_code)
 
     name_prefix = COUNTRIES[country_code]
-    create_rules(name_prefix, addresses, dry_run=dry_run)
+    create_rules(name_prefix, addresses, dry_run=dry_run, gcp_project=gcp_project)
 
 
 def get_args():
@@ -31,11 +32,12 @@ def get_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--dry-run', action='store_true', help='ドライラン')
     parser.add_argument('--country-code', required=True, help='国コード')
+    parser.add_argument('--gcp-project', required=True, help='GCP プロジェクト')
 
     return parser.parse_args()
 
 
-def create_rules(name_prefix, addresses, *, dry_run):
+def create_rules(name_prefix, addresses, *, dry_run, gcp_project):
     """ファイヤウォールルールを複数件まとめて作成する"""
     n = 0
     while True:
@@ -47,11 +49,11 @@ def create_rules(name_prefix, addresses, *, dry_run):
             break
 
         name = '{}{}'.format(name_prefix, n)
-        create_rule(name, chunk_addresses, dry_run=dry_run)
+        create_rule(name, chunk_addresses, dry_run=dry_run, gcp_project=gcp_project)
         n += 1
 
 
-def create_rule(name, addresses, *, dry_run):
+def create_rule(name, addresses, *, dry_run, gcp_project):
     """ファイヤウォールルールを 1 件作成する"""
     args = [
         'gcloud',
@@ -59,6 +61,7 @@ def create_rule(name, addresses, *, dry_run):
         'firewall-rules',
         'create',
         name,
+        '--project={}'.format(gcp_project),
         '--action=DENY',
         '--rules=ALL',
         '--direction=INGRESS',
@@ -76,6 +79,7 @@ def create_rule(name, addresses, *, dry_run):
         kwargs['shell'] = True
 
     return subprocess.run(args, **kwargs)
+
 
 def get_addresses(country_code):
     """アドレス一覧を取得する"""
