@@ -54,6 +54,10 @@ optional arguments:
 
 - [Google Cloud Platform で特定の国からのアクセスをブロックする方法 | gotohayato.com](https://gotohayato.com/content/520/)
 
+## 関連リポジトリ
+
+- [GitHub - gh640/gcp-allow-only-japan-ja](https://github.com/gh640/gcp-allow-only-japan-ja)
+
 ## 参考
 
 - [VPC firewall rules overview  |  Google Cloud](https://cloud.google.com/vpc/docs/firewalls)
