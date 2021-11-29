@@ -3,6 +3,11 @@
 Google Cloud Platform で特定の国からのアクセスをブロックするルールを作成するためのサンプルスクリプトです。
 あくまでもサンプルです。
 
+## 必須
+
+- Python 3
+- [`gcloud` コマンドラインツール](https://cloud.google.com/sdk)
+
 ## 使い方
 
 `git clone` でスクリプトをダウンロードします。
@@ -17,21 +22,36 @@ git clone https://github.com/gh640/gcp-block-country-ja
 curl -O https://ipv4.fetus.jp/cn.txt
 ```
 
-国コードを指定して dry run モードで実行します。
+ファイルの中身のサンプル:
 
-```bash
-python gcp_block_country.py --country-code cn --dry-run
+```text
+#
+# [cn] 中華人民共和国 (China)
+#  https://ipv4.fetus.jp/cn.txt
+#  出力日時: xxx
+#
+
+1.0.1.0/24
+1.0.2.0/23
+1.0.8.0/21
+1.0.32.0/19
 ```
 
-問題がなさそうであれば dry run を外して実行します。
+GCP プロジェクトと国コードを指定して dry run モードで実行します。
 
 ```bash
-python gcp_block_country.py --country-code cn
+python gcp_block_country.py --gcp-project my-project --country-code cn --dry-run
+```
+
+問題がなさそうであれば dry run オプションを外して実行します。
+
+```bash
+python gcp_block_country.py --gcp-project my-project --country-code cn
 ```
 
 ```text
-python gcp_block_country.py --help
-usage: gcp_block_country.py [-h] [--dry-run] --country-code COUNTRY_CODE
+$ python gcp_block_country.py --help
+usage: gcp_block_country.py [-h] [--dry-run] --country-code COUNTRY_CODE --gcp-project GCP_PROJECT
 
 Google Cloud Platform で特定の国からのアクセスをブロックするルールを作成するためのスクリプト
 
@@ -40,6 +60,9 @@ optional arguments:
   --dry-run             ドライラン
   --country-code COUNTRY_CODE
                         国コード
+  --gcp-project GCP_PROJECT
+                        GCP プロジェクト
+usage: gcp_block_country.py [-h] [--dry-run] --country-code COUNTRY_CODE
 ```
 
 ### 有効な国コード
