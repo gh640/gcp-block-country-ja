@@ -1,8 +1,10 @@
 """Google Cloud Platform で特定の国からのアクセスをブロックするルールを作成するためのスクリプト"""
 
 import argparse
+import itertools
 import subprocess
 import sys
+from functools import partial
 from math import ceil
 from pathlib import Path
 
@@ -28,8 +30,8 @@ def main():
     print(f'Total addresses: {total_count}')
     print(f'Total rules being created: {ceil(total_count / CHUNK_SIZE)}')
 
-    name_prefix = COUNTRIES[country_code]
-    create_rules(name_prefix, addresses, dry_run=dry_run, gcp_project=gcp_project)
+    prefix = COUNTRIES[country_code]
+    create_rules(prefix, addresses, dry_run=dry_run, gcp_project=gcp_project)
 
 
 def get_args():
@@ -42,22 +44,18 @@ def get_args():
     return parser.parse_args()
 
 
-def create_rules(
-    name_prefix: str, addresses: list[str], *, dry_run: bool, gcp_project: str
-):
+def create_rules(prefix: str, addresses: list[str], *, dry_run: bool, gcp_project: str):
     """ファイヤウォールルールを複数件まとめて作成する"""
-    n = 0
-    while True:
+    create_rule_ = partial(create_rule, dry_run=dry_run, gcp_project=gcp_project)
+
+    for n in itertools.count():
         start = n * CHUNK_SIZE
         stop = start + CHUNK_SIZE
-
         chunk_addresses = addresses[start:stop]
         if not chunk_addresses:
             break
 
-        name = f'{name_prefix}{n}'
-        create_rule(name, chunk_addresses, dry_run=dry_run, gcp_project=gcp_project)
-        n += 1
+        create_rule_(f'{prefix}{n}', chunk_addresses)
 
 
 def create_rule(name: str, addresses: list[str], *, dry_run: bool, gcp_project: str):
@@ -80,6 +78,11 @@ def create_rule(name: str, addresses: list[str], *, dry_run: bool, gcp_project: 
         print('Run:', ' '.join(args))
         return
 
+    return run(args)
+
+
+def run(args: list[str]):
+    """コマンドを実行する"""
     # Windows では `shell=True` が必要
     kwargs = {'check': True}
     if sys.platform == 'win32':
