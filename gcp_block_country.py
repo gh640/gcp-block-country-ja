@@ -1,9 +1,12 @@
 """Google Cloud Platform で特定の国からのアクセスをブロックするルールを作成するためのスクリプト"""
 
 import argparse
+import itertools
 import subprocess
 import sys
+from collections.abc import Iterator
 from math import ceil
+from pathlib import Path
 
 CHUNK_SIZE = 256
 # サポート対象の国の一覧
@@ -24,11 +27,17 @@ def main():
 
     addresses = get_addresses(country_code)
     total_count = len(addresses)
-    print('Total addresses: {}'.format(total_count))
-    print('Total rules being created: {}'.format(ceil(total_count / CHUNK_SIZE)))
+    print(f'Total addresses: {total_count}')
+    print(f'Total rules being created: {ceil(total_count / CHUNK_SIZE)}')
 
-    name_prefix = COUNTRIES[country_code]
-    create_rules(name_prefix, addresses, dry_run=dry_run, gcp_project=gcp_project)
+    prefix = COUNTRIES[country_code]
+    args_list = create_rules(prefix, addresses, gcp_project=gcp_project)
+
+    for args in args_list:
+        if dry_run:
+            print(f'Run: {" ".join(args)}')
+        else:
+            run(args)
 
 
 def get_args():
@@ -41,42 +50,40 @@ def get_args():
     return parser.parse_args()
 
 
-def create_rules(name_prefix, addresses, *, dry_run, gcp_project):
+def create_rules(
+    prefix: str, addresses: list[str], *, gcp_project: str
+) -> Iterator[list[str]]:
     """ファイヤウォールルールを複数件まとめて作成する"""
-    n = 0
-    while True:
+    for n in itertools.count():
         start = n * CHUNK_SIZE
         stop = start + CHUNK_SIZE
-
         chunk_addresses = addresses[start:stop]
         if not chunk_addresses:
             break
 
-        name = '{}{}'.format(name_prefix, n)
-        create_rule(name, chunk_addresses, dry_run=dry_run, gcp_project=gcp_project)
-        n += 1
+        yield create_rule(f'{prefix}{n}', chunk_addresses, gcp_project=gcp_project)
 
 
-def create_rule(name, addresses, *, dry_run, gcp_project):
+def create_rule(name: str, addresses: list[str], *, gcp_project: str) -> list[str]:
     """ファイヤウォールルールを 1 件作成する"""
-    args = [
+    return [
         'gcloud',
         'compute',
         'firewall-rules',
         'create',
         name,
-        '--project={}'.format(gcp_project),
+        f'--project={gcp_project}',
         '--action=DENY',
         '--rules=ALL',
         '--direction=INGRESS',
         '--priority=10',
         '--no-enable-logging',
-        '--source-ranges={}'.format(','.join(addresses)),
+        f'--source-ranges={",".join(addresses)}',
     ]
-    if dry_run:
-        print('Run:', ' '.join(args))
-        return
 
+
+def run(args: list[str]):
+    """コマンドを実行する"""
     # Windows では `shell=True` が必要
     kwargs = {'check': True}
     if sys.platform == 'win32':
@@ -85,14 +92,14 @@ def create_rule(name, addresses, *, dry_run, gcp_project):
     return subprocess.run(args, **kwargs)
 
 
-def get_addresses(country_code):
+def get_addresses(country_code: str) -> list[str]:
     """アドレス一覧を取得する"""
 
-    def is_valid(line):
+    def is_valid(line: str):
         return line.strip() and not line.startswith('#')
 
-    with open('./{}.txt'.format(country_code)) as f:
-        addresses = [l.strip() for l in f.readlines() if is_valid(l)]
+    content = Path(f'./{country_code}.txt').read_text()
+    addresses = [l for l in content.splitlines() if is_valid(l)]
 
     return addresses
 
