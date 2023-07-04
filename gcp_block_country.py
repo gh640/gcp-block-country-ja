@@ -4,7 +4,7 @@ import argparse
 import itertools
 import subprocess
 import sys
-from functools import partial
+from collections.abc import Iterator
 from math import ceil
 from pathlib import Path
 
@@ -31,7 +31,13 @@ def main():
     print(f'Total rules being created: {ceil(total_count / CHUNK_SIZE)}')
 
     prefix = COUNTRIES[country_code]
-    create_rules(prefix, addresses, dry_run=dry_run, gcp_project=gcp_project)
+    args_list = create_rules(prefix, addresses, gcp_project=gcp_project)
+
+    for args in args_list:
+        if dry_run:
+            print(f'Run: {" ".join(args)}')
+        else:
+            run(args)
 
 
 def get_args():
@@ -44,10 +50,10 @@ def get_args():
     return parser.parse_args()
 
 
-def create_rules(prefix: str, addresses: list[str], *, dry_run: bool, gcp_project: str):
+def create_rules(
+    prefix: str, addresses: list[str], *, gcp_project: str
+) -> Iterator[list[str]]:
     """ファイヤウォールルールを複数件まとめて作成する"""
-    create_rule_ = partial(create_rule, dry_run=dry_run, gcp_project=gcp_project)
-
     for n in itertools.count():
         start = n * CHUNK_SIZE
         stop = start + CHUNK_SIZE
@@ -55,12 +61,12 @@ def create_rules(prefix: str, addresses: list[str], *, dry_run: bool, gcp_projec
         if not chunk_addresses:
             break
 
-        create_rule_(f'{prefix}{n}', chunk_addresses)
+        yield create_rule(f'{prefix}{n}', chunk_addresses, gcp_project=gcp_project)
 
 
-def create_rule(name: str, addresses: list[str], *, dry_run: bool, gcp_project: str):
+def create_rule(name: str, addresses: list[str], *, gcp_project: str) -> list[str]:
     """ファイヤウォールルールを 1 件作成する"""
-    args = [
+    return [
         'gcloud',
         'compute',
         'firewall-rules',
@@ -74,11 +80,6 @@ def create_rule(name: str, addresses: list[str], *, dry_run: bool, gcp_project: 
         '--no-enable-logging',
         f'--source-ranges={",".join(addresses)}',
     ]
-    if dry_run:
-        print('Run:', ' '.join(args))
-        return
-
-    return run(args)
 
 
 def run(args: list[str]):
